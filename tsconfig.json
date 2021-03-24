@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2018",
-    "module": "CommonJS",
     "isolatedModules": true,
 
     "strict": true,
@@ -16,9 +15,7 @@
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "outDir": "out",
     "allowJs": true,
-    // esnext for Object.fromEntries
     "lib": ["dom", "esnext"]
   },
   "include": ["src/**/*.ts"],
