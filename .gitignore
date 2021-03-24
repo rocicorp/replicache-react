@@ -1,5 +1,4 @@
+!out/package.json
 out
-out.esm
+out.cjs
 node_modules
-!out.esm/package.json
-

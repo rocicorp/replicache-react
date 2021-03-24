@@ -2,12 +2,13 @@
   "name": "replicache-react-util",
   "version": "1.2.0",
   "description": "",
-  "main": "out/index.js",
-  "module": "out.esm/index.js",
+  "main": "out.cjs/index.js",
+  "module": "out/index.js",
   "scripts": {
-    "build-cjs": "tsc --module commonjs --outDir out",
-    "build-esm": "tsc --module ESNext --outDir out.esm",
+    "build-cjs": "tsc --module commonjs --outDir out.cjs",
+    "build-esm": "tsc --module ESNext --outDir out",
     "build": "npm run build-esm && npm run build-cjs",
+    "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -23,6 +24,6 @@
   },
   "files": [
     "out",
-    "out.esm"
+    "out.cjs"
   ]
 }
