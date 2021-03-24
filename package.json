@@ -1,10 +1,13 @@
 {
   "name": "replicache-react-util",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
-  "module": "out/index.js",
+  "main": "out/index.js",
   "scripts": {
-    "build": "tsc",
+    "build-cjs": "tsc --module commonjs --outDir out",
+    "build-esm": "tsc --module ESNext --outDir out && mv out/index.js out/index.mjs",
+    "build": "npm run build-esm && npm run build-cjs",
+    "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
