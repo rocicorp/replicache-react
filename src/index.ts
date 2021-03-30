@@ -1,4 +1,4 @@
-import type Replicache from 'replicache';
+import type {Replicache} from 'replicache';
 import type {JSONValue, ReadTransaction} from 'replicache';
 import {useEffect, useState} from 'react';
 
