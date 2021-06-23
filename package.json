@@ -1,7 +1,8 @@
 {
   "name": "replicache-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Miscellaneous utilities for using Replicache with React",
+  "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
   "main": "out/index.js",
   "scripts": {
