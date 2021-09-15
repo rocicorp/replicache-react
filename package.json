@@ -1,6 +1,6 @@
 {
   "name": "replicache-react",
-  "version": "1.0.4",
+  "version": "2.0.0-beta.1",
   "description": "Miscellaneous utilities for using Replicache with React",
   "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/react": ">=16.0 <18.0",
-    "replicache": ">=4.0.1 <8.0 || >7.0.0-beta <7.0.0-beta.3",
+    "replicache": ">= 7.0.0-beta.3",
     "typescript": "^4.3.4"
   },
   "files": [
