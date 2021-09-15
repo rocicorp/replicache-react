@@ -1,8 +1,8 @@
 import type {Replicache} from 'replicache';
-import type {JSONValue, ReadTransaction} from 'replicache';
+import type {ReadonlyJSONValue, ReadTransaction} from 'replicache';
 import {useEffect, useState} from 'react';
 
-export function useSubscribe<R extends JSONValue>(
+export function useSubscribe<R extends ReadonlyJSONValue>(
   rep: Replicache,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,
