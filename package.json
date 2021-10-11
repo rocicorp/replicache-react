@@ -33,6 +33,7 @@
   },
   "files": [
     "out/index.js",
-    "out/index.mjs"
+    "out/index.mjs",
+    "out/index.d.ts"
   ]
 }
