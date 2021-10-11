@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import {expect} from '@esm-bundle/chai';
 import React from 'react';
 import {render} from 'react-dom';
 import {Replicache, WriteTransaction} from 'replicache';
