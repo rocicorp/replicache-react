@@ -1,6 +1,6 @@
 {
   "name": "replicache-react",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Miscellaneous utilities for using Replicache with React",
   "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
@@ -17,7 +17,7 @@
   "peerDependencies": {
     "react": ">=16.0 <18.0",
     "react-dom": ">=16.0 <18.0",
-    "replicache": ">=4.0.1 <8.0 || >7.0.0-beta <7.0.0 || >8.0.0-beta <8.0.0"
+    "replicache": ">=4.0.1 <9.0 || >7.0.0-beta <7.0.0 || >8.0.0-beta <8.0.0"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
