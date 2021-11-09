@@ -10,27 +10,46 @@ function sleep(ms: number | undefined): Promise<void> {
 }
 
 test('null/undefined replicache', async () => {
-  let subResult = '';
-
-  function A({rep}: {rep: Replicache | null | undefined}) {
-    subResult = useSubscribe(
+  function A({rep, def}: {rep: Replicache | null | undefined; def: string}) {
+    const subResult = useSubscribe(
       rep,
       async () => {
-        return 'foo';
+        return 'hello';
       },
-      'default',
+      def,
     );
-    return <div>subResult</div>;
+    return <div>{subResult}</div>;
   }
 
   const div = document.createElement('div');
-  render(<A rep={null} />, div);
-  sleep(1);
-  expect(subResult).to.equal('default');
 
-  render(<A rep={undefined} />, div);
-  sleep(1);
-  expect(subResult).to.equal('default');
+  render(<A key="a" rep={null} def="a" />, div);
+  expect(div.textContent).to.equal('a');
+
+  render(<A key="b" rep={undefined} def="b" />, div);
+  expect(div.textContent).to.equal('b');
+
+  const rep = new Replicache({
+    name: 'null-undef-test',
+    useMemstore: true,
+    mutators: {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      dummy: () => {},
+    },
+  });
+
+  // Replicache initializes its client ID on first run, this maakes the subscribe inside
+  // <A> take non-deterministic time. Running an empty mutation here and waiting forces
+  // that work to be done already by the time we get to rendering <A> below.
+  await rep.mutate.dummy();
+
+  render(<A key="c" rep={rep} def="c" />, div);
+  expect(div.textContent).to.equal('c');
+  // TODO: I'm not sure why just a microtask isn't sufficient.
+  await new Promise(res => {
+    window.requestAnimationFrame(res);
+  });
+  expect(div.textContent).to.equal('hello');
 });
 
 test('Batching of subscriptions', async () => {
