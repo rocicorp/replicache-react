@@ -28,6 +28,10 @@ export function useSubscribe<R extends ReadonlyJSONValue>(
 ): R {
   const [snapshot, setSnapshot] = useState<R>(def);
   useEffect(() => {
+    if (!rep) {
+      return
+    }
+    
     return rep.subscribe(query, {
       onData: (data: R) => {
         callbacks.push(() => setSnapshot(data));
