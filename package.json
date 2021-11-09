@@ -1,6 +1,6 @@
 {
   "name": "replicache-react",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Miscellaneous utilities for using Replicache with React",
   "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
