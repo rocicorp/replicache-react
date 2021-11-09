@@ -21,7 +21,7 @@ function doCallback() {
 }
 
 export function useSubscribe<R extends ReadonlyJSONValue>(
-  rep: Replicache,
+  rep: Replicache | null | undefined,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

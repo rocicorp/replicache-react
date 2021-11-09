@@ -9,6 +9,30 @@ function sleep(ms: number | undefined): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+test('null/undefined replicache', async () => {
+  let subResult = '';
+
+  function A({rep}: {rep: Replicache | null | undefined}) {
+    subResult = useSubscribe(
+      rep,
+      async () => {
+        return 'foo';
+      },
+      'default',
+    );
+    return <div>subResult</div>;
+  }
+
+  const div = document.createElement('div');
+  render(<A rep={null} />, div);
+  sleep(1);
+  expect(subResult).to.equal('default');
+
+  render(<A rep={undefined} />, div);
+  sleep(1);
+  expect(subResult).to.equal('default');
+});
+
 test('Batching of subscriptions', async () => {
   const mutators = {
     async addData(tx: WriteTransaction, data: Record<string, JSONValue>) {
