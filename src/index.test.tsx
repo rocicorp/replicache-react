@@ -10,29 +10,36 @@ function sleep(ms: number | undefined): Promise<void> {
 }
 
 test('null/undefined replicache', async () => {
-  let subResult = '';
-
   function A({rep}: {rep: Replicache | null | undefined}) {
-    subResult = useSubscribe(
+    const subResult = useSubscribe(
       rep,
       async () => {
+        console.log('running query');
         return 'foo';
       },
       'default',
     );
-    return <div>subResult</div>;
+    return <div>{subResult}</div>;
   }
 
   const div = document.createElement('div');
+
+  /*
   render(<A rep={null} />, div);
   sleep(1);
-  expect(subResult).to.equal('default');
+  expect(div.textContent).to.equal('default');
 
   render(<A rep={undefined} />, div);
   sleep(1);
-  expect(subResult).to.equal('default');
+  expect(div.textContent).to.equal('default');
+  */
+
+  render(<A rep={new Replicache()} />, div);
+  await sleep(1000);
+  expect(div.textContent).to.equal('foo');
 });
 
+/*
 test('Batching of subscriptions', async () => {
   const mutators = {
     async addData(tx: WriteTransaction, data: Record<string, JSONValue>) {
@@ -93,3 +100,4 @@ test('Batching of subscriptions', async () => {
   expect(renderLog).to.deep.equal(['render B', 'a1', 'b3']);
   expect(div.innerHTML).to.equal('<div>a: a1</div><div>b: b3</div>');
 });
+*/

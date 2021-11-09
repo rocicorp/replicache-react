@@ -28,15 +28,19 @@ export function useSubscribe<R extends ReadonlyJSONValue>(
   deps: Array<any> = [],
 ): R {
   const [snapshot, setSnapshot] = useState<R>(def);
+  console.log('snapshot is', snapshot);
   useEffect(() => {
     if (!rep) {
       return;
     }
+    console.log('has rep, running subscribe');
 
     return rep.subscribe(query, {
       onData: (data: R) => {
+        console.log('got data', data, 'adding callback');
         callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
+          console.log('calling callback');
           void Promise.resolve().then(doCallback);
           hasPendingCallback = true;
         }
