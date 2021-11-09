@@ -24,19 +24,20 @@ export function useSubscribe<R extends ReadonlyJSONValue>(
   rep: Replicache,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   deps: Array<any> = [],
 ): R {
   const [snapshot, setSnapshot] = useState<R>(def);
   useEffect(() => {
     if (!rep) {
-      return
+      return;
     }
-    
+
     return rep.subscribe(query, {
       onData: (data: R) => {
         callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
-          Promise.resolve().then(doCallback);
+          void Promise.resolve().then(doCallback);
           hasPendingCallback = true;
         }
       },
