@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
 
 // We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
-// we do not render things more than once overv all of the changed subscriptions.
+// we do not render things more than once over all of the changed subscriptions.
 
 let hasPendingCallback = false;
 let callbacks: (() => void)[] = [];
