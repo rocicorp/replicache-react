@@ -23,7 +23,7 @@ function doCallback() {
 export type Subscribeable = Pick<Replicache, 'subscribe'>;
 
 export function useSubscribe<R extends ReadonlyJSONValue>(
-  rep: Replicache | Subscribeable | null | undefined,
+  subscribeable: Subscribeable | null | undefined,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,11 +31,11 @@ export function useSubscribe<R extends ReadonlyJSONValue>(
 ): R {
   const [snapshot, setSnapshot] = useState<R>(def);
   useEffect(() => {
-    if (!rep) {
+    if (!subscribeable) {
       return;
     }
 
-    return rep.subscribe(query, {
+    return subscribeable.subscribe(query, {
       onData: (data: R) => {
         callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
@@ -44,6 +44,6 @@ export function useSubscribe<R extends ReadonlyJSONValue>(
         }
       },
     });
-  }, [rep, ...deps]);
+  }, [subscribeable, ...deps]);
   return snapshot;
 }
