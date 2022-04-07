@@ -38,17 +38,13 @@ test('null/undefined replicache', async () => {
     },
   });
 
-  // Replicache initializes its client ID on first run, this maakes the subscribe inside
-  // <A> take non-deterministic time. Running an empty mutation here and waiting forces
-  // that work to be done already by the time we get to rendering <A> below.
-  await rep.mutate.dummy();
+  // Replicache initializes its client ID on first run, this makes the
+  // subscribe inside <A> take non-deterministic time.
+  await rep.clientID;
 
   render(<A key="c" rep={rep} def="c" />, div);
   expect(div.textContent).to.equal('c');
-  // TODO: I'm not sure why just a microtask isn't sufficient.
-  await new Promise(res => {
-    window.requestAnimationFrame(res);
-  });
+  await sleep(1);
   expect(div.textContent).to.equal('hello');
 });
 
