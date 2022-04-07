@@ -22,6 +22,11 @@
     "react-dom": ">=16.0 <18.0",
     "replicache": ">=4.0.1 <10.0 || >7.0.0-beta <7.0.0 || >8.0.0-beta <8.0.0 || >9.0.0-beta <9.0.0"
   },
+  "peerDependenciesMeta": {
+    "replicache": {
+      "optional": true
+    }
+  }
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
     "@snowpack/web-test-runner-plugin": "^0.2.2",

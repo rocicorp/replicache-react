@@ -20,8 +20,10 @@ function doCallback() {
   });
 }
 
+export type Subscribeable = Pick<Replicache, 'subscribe'>;
+
 export function useSubscribe<R extends ReadonlyJSONValue>(
-  rep: Replicache | null | undefined,
+  rep: Replicache | null | undefined | Subscribeable,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
