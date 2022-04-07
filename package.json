@@ -20,7 +20,7 @@
   "peerDependencies": {
     "react": ">=16.0 <18.0",
     "react-dom": ">=16.0 <18.0",
-    "replicache": ">=4.0.1 <10.0 || >7.0.0-beta <7.0.0 || >8.0.0-beta <8.0.0 || >9.0.0-beta <9.0.0"
+    "replicache": ">=10.0.0-alpha.1"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
@@ -33,7 +33,7 @@
     "@web/test-runner": "^0.13.18",
     "eslint": "^8.2.0",
     "prettier": "^2.4.1",
-    "replicache": ">= 7.0.0",
+    "replicache": "^10.0.0-alpha.1",
     "snowpack": "^3.8.8",
     "typescript": "^4.4.3"
   },

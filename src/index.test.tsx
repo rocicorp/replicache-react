@@ -1,7 +1,7 @@
 import {expect} from '@esm-bundle/chai';
 import React from 'react';
 import {render} from 'react-dom';
-import {Replicache, WriteTransaction} from 'replicache';
+import {Replicache, WriteTransaction, TEST_LICENSE_KEY} from 'replicache';
 import type {JSONValue} from 'replicache';
 import {useSubscribe} from './index';
 
@@ -30,8 +30,8 @@ test('null/undefined replicache', async () => {
   expect(div.textContent).to.equal('b');
 
   const rep = new Replicache({
-    name: 'null-undef-test',
-    useMemstore: true,
+    name: 'null-undef-test' + Math.random(),
+    licenseKey: TEST_LICENSE_KEY,
     mutators: {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       dummy: () => {},
@@ -40,7 +40,7 @@ test('null/undefined replicache', async () => {
 
   // Replicache initializes its client ID on first run, this makes the
   // subscribe inside <A> take non-deterministic time.
-  await rep.clientID;
+  await rep.mutate.dummy();
 
   render(<A key="c" rep={rep} def="c" />, div);
   expect(div.textContent).to.equal('c');
@@ -60,7 +60,11 @@ test('Batching of subscriptions', async () => {
   const renderLog: (string | null)[] = [];
 
   type MyRep = Replicache<typeof mutators>;
-  const rep: MyRep = new Replicache({mutators});
+  const rep: MyRep = new Replicache({
+    name: 'batching-test' + Math.random(),
+    licenseKey: TEST_LICENSE_KEY,
+    mutators,
+  });
   await rep.clientID;
   await sleep(1);
 
