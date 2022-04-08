@@ -1,6 +1,6 @@
 {
   "name": "replicache-react",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Miscellaneous utilities for using Replicache with React",
   "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
@@ -20,7 +20,7 @@
   "peerDependencies": {
     "react": ">=16.0 <18.0",
     "react-dom": ">=16.0 <18.0",
-    "replicache": ">=4.0.1 <10.0 || >7.0.0-beta <7.0.0 || >8.0.0-beta <8.0.0 || >9.0.0-beta <9.0.0"
+    "replicache": ">=4.0.1 <11.0 || >7.0.0-beta <7.0.0 || >8.0.0-beta <8.0.0 || >9.0.0-beta <9.0.0 || >10.0.0-alpha <10.0.0"
   },
   "devDependencies": {
     "@esm-bundle/chai": "^4.3.4-fix.0",
@@ -30,9 +30,12 @@
     "@types/react": ">=16.0 <18.0",
     "@types/react-dom": "^17.0.9",
     "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.18.0",
     "@web/test-runner": "^0.13.18",
     "eslint": "^8.2.0",
     "prettier": "^2.4.1",
+    "react": ">=16.0 <18.0",
+    "react-dom": ">=16.0 <18.0",
     "replicache": ">= 7.0.0",
     "snowpack": "^3.8.8",
     "typescript": "^4.4.3"
