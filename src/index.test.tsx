@@ -1,7 +1,7 @@
 import {expect} from '@esm-bundle/chai';
 import React from 'react';
 import {render} from 'react-dom';
-import {Replicache, WriteTransaction} from 'replicache';
+import {Replicache, TEST_LICENSE_KEY, WriteTransaction} from 'replicache';
 import type {JSONValue} from 'replicache';
 import {useSubscribe} from './index';
 
@@ -31,10 +31,9 @@ test('null/undefined replicache', async () => {
 
   const rep = new Replicache({
     name: 'null-undef-test',
-    useMemstore: true,
+    licenseKey: TEST_LICENSE_KEY,
     mutators: {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      dummy: () => {},
+      dummy: () => undefined,
     },
   });
 
@@ -44,7 +43,7 @@ test('null/undefined replicache', async () => {
 
   render(<A key="c" rep={rep} def="c" />, div);
   expect(div.textContent).to.equal('c');
-  await sleep(1);
+  await sleep(10);
   expect(div.textContent).to.equal('hello');
 });
 
@@ -60,7 +59,11 @@ test('Batching of subscriptions', async () => {
   const renderLog: (string | null)[] = [];
 
   type MyRep = Replicache<typeof mutators>;
-  const rep: MyRep = new Replicache({mutators});
+  const rep: MyRep = new Replicache({
+    name: 'batching-of-subscriptions',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators,
+  });
   await rep.clientID;
   await sleep(1);
 
