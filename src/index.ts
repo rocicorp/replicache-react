@@ -3,8 +3,6 @@ import type {ReadonlyJSONValue, ReadTransaction} from 'replicache';
 import {useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
 
-type Subscribable = Pick<Replicache, 'subscribe'>;
-
 // We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
 // we do not render things more than once over all of the changed subscriptions.
 
@@ -23,7 +21,7 @@ function doCallback() {
 }
 
 export function useSubscribe<R extends ReadonlyJSONValue>(
-  rep: Subscribable | null | undefined,
+  rep: Replicache | null | undefined,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,
   deps: Array<unknown> = [],
