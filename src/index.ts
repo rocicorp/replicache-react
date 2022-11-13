@@ -1,9 +1,18 @@
-import type {Replicache} from 'replicache';
-import type {ReadonlyJSONValue, ReadTransaction} from 'replicache';
 import {useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
 
-type Subscribable = Pick<Replicache, 'subscribe'>;
+interface SubscribeOptions<Data> {
+  onData: (data: Data) => void;
+}
+
+type Query<ReadTransaction, Ret> = (tx: ReadTransaction) => Promise<Ret>;
+
+interface Subscribable<ReadTransaction, Ret> {
+  subscribe: (
+    query: Query<ReadTransaction, Ret>,
+    opts: SubscribeOptions<Ret>,
+  ) => void;
+}
 
 // We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
 // we do not render things more than once over all of the changed subscriptions.
@@ -22,20 +31,20 @@ function doCallback() {
   });
 }
 
-export function useSubscribe<R extends ReadonlyJSONValue>(
-  rep: Subscribable | null | undefined,
-  query: (tx: ReadTransaction) => Promise<R>,
-  def: R,
+export function useSubscribe<ReadTransaction, Ret>(
+  rep: Subscribable<ReadTransaction, Ret> | undefined | null,
+  query: Query<ReadTransaction, Ret>,
+  def: Ret,
   deps: Array<unknown> = [],
-): R {
-  const [snapshot, setSnapshot] = useState<R>(def);
+): Ret {
+  const [snapshot, setSnapshot] = useState<Ret>(def);
   useEffect(() => {
     if (!rep) {
       return;
     }
 
     return rep.subscribe(query, {
-      onData: (data: R) => {
+      onData: (data: Ret) => {
         callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
           void Promise.resolve().then(doCallback);
