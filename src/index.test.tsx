@@ -141,3 +141,56 @@ test('returning undefined', async () => {
   await sleep(1);
   expect(div.textContent).to.equal('undefined');
 });
+
+test('changing subscribable instances', async () => {
+  const {promise: p1, resolve: r1} = resolver();
+  function A({
+    rep,
+    val,
+    res,
+  }: {
+    rep: Replicache | null | undefined;
+    val: string;
+    res: () => void;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        res();
+        return val;
+      },
+      undefined,
+    );
+    return <div>{subResult === undefined ? '' : val}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  const rep1 = new Replicache({
+    name: 'change-instance',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep1} val="a" res={r1} />, div);
+  await p1;
+  await sleep(1);
+  expect(div.textContent).to.equal('a');
+
+  const rep2 = new Replicache({
+    name: 'change-instance2',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  const {promise: p2, resolve: r2} = resolver();
+  render(<A rep={rep2} val="b" res={r2} />, div);
+  await p2;
+  await sleep(1);
+  expect(div.textContent).to.equal('b');
+
+  const {resolve: r3} = resolver();
+  render(<A rep={undefined} val="c" res={r3} />, div);
+  await sleep(1);
+  expect(div.textContent).to.equal('');
+});
