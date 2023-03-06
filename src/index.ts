@@ -34,7 +34,7 @@ export function useSubscribe<R extends ReadonlyJSONValue | undefined>(
       return;
     }
 
-    return rep.subscribe(query, {
+    const unsubscribe = rep.subscribe(query, {
       onData: (data: R) => {
         callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
@@ -43,6 +43,11 @@ export function useSubscribe<R extends ReadonlyJSONValue | undefined>(
         }
       },
     });
+
+    return () => {
+      unsubscribe();
+      setSnapshot(def);
+    };
   }, [rep, ...deps]);
   return snapshot;
 }
