@@ -22,7 +22,7 @@ function doCallback() {
   });
 }
 
-export function useSubscribe<R extends ReadonlyJSONValue>(
+export function useSubscribe<R extends ReadonlyJSONValue | undefined>(
   rep: Subscribable | null | undefined,
   query: (tx: ReadTransaction) => Promise<R>,
   def: R,

@@ -112,3 +112,32 @@ test('Batching of subscriptions', async () => {
   expect(renderLog).to.deep.equal(['render B', 'a1', 'b3']);
   expect(div.innerHTML).to.equal('<div>a: a1</div><div>b: b3</div>');
 });
+
+test('returning undefined', async () => {
+  const {promise, resolve} = resolver();
+  function A({rep, def}: {rep: Replicache | null | undefined; def: string}) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        resolve();
+        return undefined;
+      },
+      def,
+    );
+    return <div>{subResult === undefined ? 'undefined' : 'defined'}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  const rep = new Replicache({
+    name: 'return-undefined',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A key="c" rep={rep} def="default" />, div);
+  expect(div.textContent).to.equal('defined');
+  await promise;
+  await sleep(1);
+  expect(div.textContent).to.equal('undefined');
+});
