@@ -1,10 +1,10 @@
 import {expect} from '@esm-bundle/chai';
+import {resolver} from '@rocicorp/resolver';
 import React from 'react';
 import {render} from 'react-dom';
-import {Replicache, WriteTransaction, TEST_LICENSE_KEY} from 'replicache';
 import type {JSONValue} from 'replicache';
+import {Replicache, TEST_LICENSE_KEY, WriteTransaction} from 'replicache';
 import {useSubscribe} from './index';
-import {resolver} from '@rocicorp/resolver';
 
 function sleep(ms: number | undefined): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -46,6 +46,8 @@ test('null/undefined replicache', async () => {
   await promise;
   await sleep(1);
   expect(div.textContent).to.equal('hello');
+
+  await rep.close();
 });
 
 test('Batching of subscriptions', async () => {
@@ -111,6 +113,8 @@ test('Batching of subscriptions', async () => {
   await sleep(1);
   expect(renderLog).to.deep.equal(['render B', 'a1', 'b3']);
   expect(div.innerHTML).to.equal('<div>a: a1</div><div>b: b3</div>');
+
+  await rep.close();
 });
 
 test('returning undefined', async () => {
@@ -140,6 +144,8 @@ test('returning undefined', async () => {
   await promise;
   await sleep(1);
   expect(div.textContent).to.equal('undefined');
+
+  await rep.close();
 });
 
 test('changing subscribable instances', async () => {
@@ -193,4 +199,7 @@ test('changing subscribable instances', async () => {
   render(<A rep={undefined} val="c" res={r3} />, div);
   await sleep(1);
   expect(div.textContent).to.equal('');
+
+  await rep1.close();
+  await rep2.close();
 });
