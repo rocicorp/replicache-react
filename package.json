@@ -1,6 +1,6 @@
 {
   "name": "replicache-react",
-  "version": "3.0.0-beta.0",
+  "version": "3.0.0",
   "description": "Miscellaneous utilities for using Replicache with React",
   "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
@@ -37,7 +37,7 @@
     "prettier": "^2.4.1",
     "react": ">=16.0 <18.0",
     "react-dom": ">=16.0 <18.0",
-    "replicache": "^13.0.0-beta.1",
+    "replicache": "^13.0.0",
     "snowpack": "^3.8.8",
     "typescript": "^4.4.3"
   },
