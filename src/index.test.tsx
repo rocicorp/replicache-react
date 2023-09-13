@@ -75,9 +75,10 @@ test('Batching of subscriptions', async () => {
   function A({rep}: {rep: MyRep}) {
     const dataA = useSubscribe(
       rep,
-      async tx => (await tx.get('a')) ?? null,
+      // TODO: Use type param to get when new Replicache is released.
+      async tx => ((await tx.get('a')) as string | undefined) ?? null,
       null,
-    ) as string | null;
+    );
     renderLog.push('render A', dataA);
     return <B rep={rep} dataA={dataA} />;
   }
@@ -85,9 +86,9 @@ test('Batching of subscriptions', async () => {
   function B({rep, dataA}: {rep: MyRep; dataA: string | null}) {
     const dataB = useSubscribe(
       rep,
-      async tx => (await tx.get('b')) ?? null,
+      async tx => ((await tx.get('b')) as string | undefined) ?? null,
       null,
-    ) as string | null;
+    );
     renderLog.push('render B', dataA, dataB);
     return (
       <>

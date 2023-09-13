@@ -1,9 +1,12 @@
-import type {Replicache} from 'replicache';
-import type {ReadonlyJSONValue, ReadTransaction} from 'replicache';
 import {useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
 
-type Subscribable = Pick<Replicache, 'subscribe'>;
+export type Subscribable<Tx, Data> = {
+  subscribe: (
+    query: (tx: Tx) => Promise<Data>,
+    {onData}: {onData: (data: Data) => void},
+  ) => () => void;
+};
 
 // We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
 // we do not render things more than once over all of the changed subscriptions.
@@ -22,21 +25,23 @@ function doCallback() {
   });
 }
 
-export function useSubscribe<R extends ReadonlyJSONValue | undefined>(
-  rep: Subscribable | null | undefined,
-  query: (tx: ReadTransaction) => Promise<R>,
+export function useSubscribe<Tx, D, R extends D>(
+  r: Subscribable<Tx, D> | null | undefined,
+  query: (tx: Tx) => Promise<R>,
   def: R,
   deps: Array<unknown> = [],
 ): R {
   const [snapshot, setSnapshot] = useState<R>(def);
   useEffect(() => {
-    if (!rep) {
+    if (!r) {
       return;
     }
 
-    const unsubscribe = rep.subscribe(query, {
-      onData: (data: R) => {
-        callbacks.push(() => setSnapshot(data));
+    const unsubscribe = r.subscribe(query, {
+      onData: data => {
+        // This is safe because we know that subscribe in fact can only return
+        // `R` (the return type of query or def).
+        callbacks.push(() => setSnapshot(data as R));
         if (!hasPendingCallback) {
           void Promise.resolve().then(doCallback);
           hasPendingCallback = true;
@@ -48,6 +53,6 @@ export function useSubscribe<R extends ReadonlyJSONValue | undefined>(
       unsubscribe();
       setSnapshot(def);
     };
-  }, [rep, ...deps]);
+  }, [r, ...deps]);
   return snapshot;
 }
