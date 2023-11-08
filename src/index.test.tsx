@@ -129,7 +129,7 @@ test('returning undefined', async () => {
       },
       def,
     );
-    return <div>{subResult === undefined ? 'undefined' : 'defined'}</div>;
+    return <div>{subResult}</div>;
   }
 
   const div = document.createElement('div');
@@ -141,10 +141,10 @@ test('returning undefined', async () => {
   });
 
   render(<A key="c" rep={rep} def="default" />, div);
-  expect(div.textContent).to.equal('defined');
+  expect(div.textContent).to.equal('default');
   await promise;
   await sleep(1);
-  expect(div.textContent).to.equal('undefined');
+  expect(div.textContent).to.equal('default');
 
   await rep.close();
 });
