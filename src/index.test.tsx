@@ -100,7 +100,18 @@ test('Batching of subscriptions', async () => {
 
   render(<A rep={rep} />, div);
   await sleep(1);
-  expect(renderLog).to.deep.equal(['render A', null, 'render B', null, null]);
+  expect(renderLog).to.deep.equal([
+    'render A',
+    null,
+    'render B',
+    null,
+    null,
+    'render A',
+    null,
+    'render B',
+    null,
+    null,
+  ]);
   expect(div.innerHTML).to.equal('<div>a: </div><div>b: </div>');
 
   renderLog.length = 0;
