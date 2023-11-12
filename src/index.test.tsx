@@ -76,7 +76,7 @@ test('Batching of subscriptions', async () => {
     const dataA = useSubscribe(
       rep,
       // TODO: Use type param to get when new Replicache is released.
-      async tx => ((await tx.get('a')) as string | undefined) ?? null,
+      async tx => (await tx.get('a')) as string | undefined,
       null,
     );
     renderLog.push('render A', dataA);
@@ -86,7 +86,7 @@ test('Batching of subscriptions', async () => {
   function B({rep, dataA}: {rep: MyRep; dataA: string | null}) {
     const dataB = useSubscribe(
       rep,
-      async tx => ((await tx.get('b')) as string | undefined) ?? null,
+      async tx => (await tx.get('b')) as string | undefined,
       null,
     );
     renderLog.push('render B', dataA, dataB);
@@ -129,7 +129,7 @@ test('returning undefined', async () => {
       },
       def,
     );
-    return <div>{subResult === undefined ? 'undefined' : 'defined'}</div>;
+    return <div>{subResult}</div>;
   }
 
   const div = document.createElement('div');
@@ -141,10 +141,10 @@ test('returning undefined', async () => {
   });
 
   render(<A key="c" rep={rep} def="default" />, div);
-  expect(div.textContent).to.equal('defined');
+  expect(div.textContent).to.equal('default');
   await promise;
   await sleep(1);
-  expect(div.textContent).to.equal('undefined');
+  expect(div.textContent).to.equal('default');
 
   await rep.close();
 });
