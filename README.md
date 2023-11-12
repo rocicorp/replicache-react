@@ -21,7 +21,7 @@ React hook that allows you monitor replicache changes
 | :-- | :-- | :-- |
 | `rep` | Replicache | Replicache instance that is being monitored |
 | `query` | (tx: ReadTransaction) => Promise<R> | Query that retrieves data to be watched |
-| `def` | R |  default value returned until initial run of query completes |
+| `def` | R |  default value returned on first render *or* whenever `query` returns `undefined` |
 | `deps` | Array<any> = [] | OPTIONAL: list of dependencies, query will be rerun when any of these change |
 
 ## Usage
