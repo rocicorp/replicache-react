@@ -25,6 +25,8 @@ function doCallback() {
   });
 }
 
+export type RemoveUndefined<T> = T extends undefined ? never : T;
+
 export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
   r: Subscribable<Tx, Data> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
@@ -57,5 +59,9 @@ export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
   if (snapshot === undefined) {
     return def;
   }
-  return snapshot;
+  // This RemoveUndefined is just here to make the return type easier to read.
+  // It should be exactly equivalent to what the type would be without this.
+  // For some reason declaring the return type to be
+  // RemoveUndefined<QueryRet> | Default doesn't typecheck.
+  return snapshot as RemoveUndefined<QueryRet>;
 }
