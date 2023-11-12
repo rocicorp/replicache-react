@@ -45,3 +45,21 @@ return (
   </ul>
 );
 ```
+
+## Changelog
+
+### 0.4.0
+
+This release changes the semantics of `def` slightly. In previous releases, `def` was returned only until `query` returned, then `useSubscribe` returns `query`'s result. Now, `def` is returned initially, but also if `query` returns `undefined`.
+
+This is an ergonomic benefit because it avoids having to type the default in two places. Before:
+
+```ts
+useSubscribe(r, tx => (await tx.get("count")) ?? 0, 0)
+```
+
+now:
+
+```ts
+useSubscribe(r, tx => tx.get("count"), 0)
+```
