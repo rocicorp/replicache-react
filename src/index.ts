@@ -55,7 +55,13 @@ export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
       unsubscribe();
       setSnapshot(undefined);
     };
-  }, [r, def, ...deps]);
+    // NOTE: `def` and `query` not passed as a dep here purposely. It would be
+    // more correct to pass them, but it's also a footgun since it's common to
+    // pass object, array, or function literals which change on every render.
+    // Also note that if this ever changes, it's a breaking change and should
+    // be documented, as if callers pass an object/array/func literal, changing
+    // this will cause a render loop that would be hard to debug.
+  }, [r, ...deps]);
   if (snapshot === undefined) {
     return def;
   }
