@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "jsx": "react",
-    "target": "ES2018",
+    "target": "ES2020",
     "isolatedModules": true,
 
     "strict": true,
@@ -11,13 +11,12 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
 
-    "importsNotUsedAsValues": "error",
-
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "allowJs": true,
-    "lib": ["dom", "esnext"]
+    "lib": ["dom", "esnext"],
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist/**/*", "build/**/*"]

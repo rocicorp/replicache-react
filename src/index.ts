@@ -1,11 +1,22 @@
-import {useEffect, useState} from 'react';
+import {DependencyList, useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
+import type {ReadonlyJSONValue} from 'replicache';
 
-export type Subscribable<Tx, Data> = {
-  subscribe: (
+export type Subscribable<Tx> = {
+  subscribe<Data extends ReadonlyJSONValue | undefined>(
     query: (tx: Tx) => Promise<Data>,
     {onData}: {onData: (data: Data) => void},
-  ) => () => void;
+  ): () => void;
+};
+
+export type SubscribableWithIsEqual<Tx> = {
+  subscribe<Data>(
+    query: (tx: Tx) => Promise<Data>,
+    options: {
+      onData: (data: Data) => void;
+      isEqual?: ((a: Data, b: Data) => boolean) | undefined;
+    },
+  ): () => void;
 };
 
 // We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
@@ -27,12 +38,64 @@ function doCallback() {
 
 export type RemoveUndefined<T> = T extends undefined ? never : T;
 
-export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
-  r: Subscribable<Tx, Data> | null | undefined,
+export type UseSubscribeOptions<QueryRet, Default> = {
+  /** Default can already be undefined since it is an unbounded type parameter. */
+  default?: Default;
+  deps?: DependencyList | undefined;
+  isEqual?: ((a: QueryRet, b: QueryRet) => boolean) | undefined;
+};
+
+function isUseSubscribeOptions<Default, QueryRet>(
+  v: Default | UseSubscribeOptions<QueryRet, Default>,
+): v is UseSubscribeOptions<QueryRet, Default> {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    ('default' in v || 'isEqual' in v || 'deps' in v)
+  );
+}
+
+export function useSubscribe<Tx, QueryRet, Default = undefined>(
+  r: SubscribableWithIsEqual<Tx> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
-  def: Default,
-  deps: Array<unknown> = [],
-) {
+  options: UseSubscribeOptions<QueryRet, Default>,
+): RemoveUndefined<QueryRet> | Default;
+export function useSubscribe<
+  Tx,
+  Data extends ReadonlyJSONValue | undefined,
+  QueryRet extends Data,
+  Default = undefined,
+>(
+  r: Subscribable<Tx> | null | undefined,
+  query: (tx: Tx) => Promise<QueryRet>,
+  def?: Default,
+  deps?: DependencyList,
+): RemoveUndefined<QueryRet> | Default;
+export function useSubscribe<Tx, QueryRet, Default>(
+  r: Subscribable<Tx> | SubscribableWithIsEqual<Tx> | null | undefined,
+  query: (tx: Tx) => Promise<QueryRet>,
+  defaultOrOptions?: Default | UseSubscribeOptions<QueryRet, Default>,
+  maybeDeps?: DependencyList,
+): RemoveUndefined<QueryRet> | Default {
+  if (isUseSubscribeOptions(defaultOrOptions)) {
+    return useSubscribeImpl(
+      r as SubscribableWithIsEqual<Tx>,
+      query,
+      defaultOrOptions,
+    );
+  }
+  return useSubscribeImpl(r as SubscribableWithIsEqual<Tx>, query, {
+    default: defaultOrOptions,
+    deps: maybeDeps,
+  });
+}
+
+function useSubscribeImpl<Tx, QueryRet, Default>(
+  r: SubscribableWithIsEqual<Tx> | null | undefined,
+  query: (tx: Tx) => Promise<QueryRet>,
+  options: UseSubscribeOptions<QueryRet, Default>,
+): RemoveUndefined<QueryRet> | Default {
+  const {default: def, deps = [], isEqual} = options;
   const [snapshot, setSnapshot] = useState<QueryRet | undefined>(undefined);
   useEffect(() => {
     if (!r) {
@@ -43,12 +106,13 @@ export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
       onData: data => {
         // This is safe because we know that subscribe in fact can only return
         // `R` (the return type of query or def).
-        callbacks.push(() => setSnapshot(data as QueryRet));
+        callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
           void Promise.resolve().then(doCallback);
           hasPendingCallback = true;
         }
       },
+      isEqual,
     });
 
     return () => {
@@ -63,7 +127,7 @@ export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
     // this will cause a render loop that would be hard to debug.
   }, [r, ...deps]);
   if (snapshot === undefined) {
-    return def;
+    return def as Default;
   }
   // This RemoveUndefined is just here to make the return type easier to read.
   // It should be exactly equivalent to what the type would be without this.
