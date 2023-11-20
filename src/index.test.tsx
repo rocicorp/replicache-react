@@ -2,9 +2,9 @@ import {expect} from '@esm-bundle/chai';
 import {resolver} from '@rocicorp/resolver';
 import React from 'react';
 import {render} from 'react-dom';
-import type {JSONValue, ReadTransaction} from 'replicache';
+import type {JSONValue, ReadTransaction, ReadonlyJSONValue} from 'replicache';
 import {Replicache, TEST_LICENSE_KEY, WriteTransaction} from 'replicache';
-import {SubscribableWithIsEqual, useSubscribe} from './index';
+import {Subscribable, SubscribableWithIsEqual, useSubscribe} from './index';
 
 function sleep(ms: number | undefined): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -207,41 +207,75 @@ test('changing subscribable instances', async () => {
 
 test('using isEqual', async () => {
   const {promise, resolve} = resolver();
-  function A({rep, def}: {rep: Replicache | null | undefined; def: string}) {
+
+  const sentinel = Symbol();
+
+  class FakeReplicache implements SubscribableWithIsEqual<ReadTransaction> {
+    subscribe<Data>(
+      query: (tx: ReadTransaction) => Promise<Data>,
+      {
+        onData,
+        isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b),
+      }: {
+        onData: (data: Data) => void;
+        isEqual?: ((a: Data, b: Data) => boolean) | undefined;
+      },
+    ): () => void {
+      const data = query({} as ReadTransaction);
+      let previous: Data | typeof sentinel = sentinel;
+      void data.then(data => {
+        if (previous === sentinel || isEqual(previous, data)) {
+          previous = data;
+          return onData(data);
+        }
+      });
+
+      return () => undefined;
+    }
+  }
+
+  function A({
+    rep,
+    def,
+  }: {
+    rep: FakeReplicache | null | undefined;
+    def: string;
+  }) {
     const subResult = useSubscribe(
       rep,
       async () => {
         resolve();
-        return 'hello';
+        return 123n;
       },
-      def,
+      {
+        isEqual(a, b) {
+          return a === b;
+        },
+        default: def,
+      },
     );
-    return <div>{subResult}</div>;
+    return (
+      <div>
+        {typeof subResult}, {String(subResult)}
+      </div>
+    );
   }
 
   const div = document.createElement('div');
 
   render(<A key="a" rep={null} def="a" />, div);
-  expect(div.textContent).to.equal('a');
+  expect(div.textContent).to.equal('string, a');
 
   render(<A key="b" rep={undefined} def="b" />, div);
-  expect(div.textContent).to.equal('b');
+  expect(div.textContent).to.equal('string, b');
 
-  const rep = new Replicache({
-    name: 'null-undef-test',
-    licenseKey: TEST_LICENSE_KEY,
-    mutators: {
-      dummy: () => undefined,
-    },
-  });
+  const rep = new FakeReplicache();
 
   render(<A key="c" rep={rep} def="c" />, div);
-  expect(div.textContent).to.equal('c');
+  expect(div.textContent).to.equal('string, c');
   await promise;
   await sleep(1);
-  expect(div.textContent).to.equal('hello');
-
-  await rep.close();
+  expect(div.textContent).to.equal('bigint, 123');
 });
 
 test.skip('using isEqual [type checking]', async () => {
@@ -318,5 +352,67 @@ test.skip('using isEqual [type checking]', async () => {
       {isEqual: (a, b) => a === b, default: 'abc'},
     );
     expectType<bigint | 'abc'>(s);
+  }
+});
+
+test('No isEqual [type checking]', async () => {
+  const use = (...args: unknown[]) => args;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function expectType<T>(_expression: T) {
+    // intentionally empty
+  }
+
+  class WithNoIsEqual<Tx> implements Subscribable<Tx> {
+    subscribe<Data extends ReadonlyJSONValue | undefined>(
+      query: (tx: Tx) => Promise<Data>,
+      {onData}: {onData: (data: Data) => void},
+    ): () => void {
+      use(query, onData);
+      return () => undefined;
+    }
+  }
+
+  {
+    const s = useSubscribe(new WithNoIsEqual<ReadTransaction>(), tx => {
+      use(tx);
+      return Promise.resolve(123);
+    });
+    expectType<123 | undefined>(s);
+  }
+
+  {
+    // When subscribe does not support isEqual, the options is treated as default :'(
+    const s = useSubscribe(
+      new WithNoIsEqual<ReadTransaction>(),
+      tx => {
+        use(tx);
+        return Promise.resolve(123);
+      },
+      {isEqual: (a: number, b: number) => a === b},
+    );
+    expectType<123 | {isEqual: (a: number, b: number) => boolean}>(s);
+  }
+
+  {
+    // This is invalid because the return type is not json
+    // @ts-expect-error index.ts(61, 3): An argument for 'options' was not provided.
+    const s = useSubscribe(new WithNoIsEqual<ReadTransaction>(), tx => {
+      use(tx);
+      return Promise.resolve(123n);
+    });
+    use(s);
+  }
+
+  {
+    const s = useSubscribe(
+      new WithNoIsEqual<ReadTransaction>(),
+      tx => {
+        use(tx);
+        return Promise.resolve(123);
+      },
+      456,
+    );
+    expectType<123 | 456>(s);
   }
 });
