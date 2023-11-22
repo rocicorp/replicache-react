@@ -1,15 +1,8 @@
 import {DependencyList, useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
-import type {ReadonlyJSONValue} from 'replicache';
+import {ReadonlyJSONValue} from 'replicache';
 
 export type Subscribable<Tx> = {
-  subscribe<Data extends ReadonlyJSONValue | undefined>(
-    query: (tx: Tx) => Promise<Data>,
-    {onData}: {onData: (data: Data) => void},
-  ): () => void;
-};
-
-export type SubscribableWithIsEqual<Tx> = {
   subscribe<Data>(
     query: (tx: Tx) => Promise<Data>,
     options: {
@@ -41,61 +34,35 @@ export type RemoveUndefined<T> = T extends undefined ? never : T;
 export type UseSubscribeOptions<QueryRet, Default> = {
   /** Default can already be undefined since it is an unbounded type parameter. */
   default?: Default;
-  deps?: DependencyList | undefined;
+  dependencies?: DependencyList | undefined;
   isEqual?: ((a: QueryRet, b: QueryRet) => boolean) | undefined;
 };
 
-function isUseSubscribeOptions<Default, QueryRet>(
-  v: Default | UseSubscribeOptions<QueryRet, Default>,
-): v is UseSubscribeOptions<QueryRet, Default> {
-  return (
-    typeof v === 'object' &&
-    v !== null &&
-    ('default' in v || 'isEqual' in v || 'deps' in v)
-  );
-}
+export type UseSubscribeOptionsNoIsEqual<QueryRet, Default> = Omit<
+  UseSubscribeOptions<QueryRet, Default>,
+  'isEqual'
+>;
 
 export function useSubscribe<Tx, QueryRet, Default = undefined>(
-  r: SubscribableWithIsEqual<Tx> | null | undefined,
-  query: (tx: Tx) => Promise<QueryRet>,
-  options: UseSubscribeOptions<QueryRet, Default>,
-): RemoveUndefined<QueryRet> | Default;
-export function useSubscribe<
-  Tx,
-  Data extends ReadonlyJSONValue | undefined,
-  QueryRet extends Data,
-  Default = undefined,
->(
   r: Subscribable<Tx> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
-  def?: Default,
-  deps?: DependencyList,
+  options: UseSubscribeOptions<QueryRet, Default>,
+): RemoveUndefined<QueryRet> | Default;
+export function useSubscribe<Tx, QueryRet extends ReadonlyJSONValue, undefined>(
+  r: Subscribable<Tx> | null | undefined,
+  query: (tx: Tx) => Promise<QueryRet>,
+): RemoveUndefined<QueryRet> | undefined;
+export function useSubscribe<Tx, QueryRet extends ReadonlyJSONValue, Default>(
+  r: Subscribable<Tx> | null | undefined,
+  query: (tx: Tx) => Promise<QueryRet>,
+  options: UseSubscribeOptionsNoIsEqual<QueryRet, Default> | undefined,
 ): RemoveUndefined<QueryRet> | Default;
 export function useSubscribe<Tx, QueryRet, Default>(
-  r: Subscribable<Tx> | SubscribableWithIsEqual<Tx> | null | undefined,
+  r: Subscribable<Tx> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
-  defaultOrOptions?: Default | UseSubscribeOptions<QueryRet, Default>,
-  maybeDeps?: DependencyList,
+  options: UseSubscribeOptions<QueryRet, Default> = {},
 ): RemoveUndefined<QueryRet> | Default {
-  if (isUseSubscribeOptions(defaultOrOptions)) {
-    return useSubscribeImpl(
-      r as SubscribableWithIsEqual<Tx>,
-      query,
-      defaultOrOptions,
-    );
-  }
-  return useSubscribeImpl(r as SubscribableWithIsEqual<Tx>, query, {
-    default: defaultOrOptions,
-    deps: maybeDeps,
-  });
-}
-
-function useSubscribeImpl<Tx, QueryRet, Default>(
-  r: SubscribableWithIsEqual<Tx> | null | undefined,
-  query: (tx: Tx) => Promise<QueryRet>,
-  options: UseSubscribeOptions<QueryRet, Default>,
-): RemoveUndefined<QueryRet> | Default {
-  const {default: def, deps = [], isEqual} = options;
+  const {default: def, dependencies = [], isEqual} = options;
   const [snapshot, setSnapshot] = useState<QueryRet | undefined>(undefined);
   useEffect(() => {
     if (!r) {
@@ -125,7 +92,7 @@ function useSubscribeImpl<Tx, QueryRet, Default>(
     // Also note that if this ever changes, it's a breaking change and should
     // be documented, as if callers pass an object/array/func literal, changing
     // this will cause a render loop that would be hard to debug.
-  }, [r, ...deps]);
+  }, [r, ...dependencies]);
   if (snapshot === undefined) {
     return def as Default;
   }
