@@ -1,6 +1,5 @@
 import {DependencyList, useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
-import {ReadonlyJSONValue} from 'replicache';
 
 export type Subscribable<Tx> = {
   subscribe<Data>(
@@ -38,26 +37,7 @@ export type UseSubscribeOptions<QueryRet, Default> = {
   isEqual?: ((a: QueryRet, b: QueryRet) => boolean) | undefined;
 };
 
-export type UseSubscribeOptionsNoIsEqual<QueryRet, Default> = Omit<
-  UseSubscribeOptions<QueryRet, Default>,
-  'isEqual'
->;
-
 export function useSubscribe<Tx, QueryRet, Default = undefined>(
-  r: Subscribable<Tx> | null | undefined,
-  query: (tx: Tx) => Promise<QueryRet>,
-  options: UseSubscribeOptions<QueryRet, Default>,
-): RemoveUndefined<QueryRet> | Default;
-export function useSubscribe<Tx, QueryRet extends ReadonlyJSONValue, undefined>(
-  r: Subscribable<Tx> | null | undefined,
-  query: (tx: Tx) => Promise<QueryRet>,
-): RemoveUndefined<QueryRet> | undefined;
-export function useSubscribe<Tx, QueryRet extends ReadonlyJSONValue, Default>(
-  r: Subscribable<Tx> | null | undefined,
-  query: (tx: Tx) => Promise<QueryRet>,
-  options: UseSubscribeOptionsNoIsEqual<QueryRet, Default> | undefined,
-): RemoveUndefined<QueryRet> | Default;
-export function useSubscribe<Tx, QueryRet, Default>(
   r: Subscribable<Tx> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
   options: UseSubscribeOptions<QueryRet, Default> = {},

@@ -312,22 +312,21 @@ test.skip('using isEqual [type checking]', async () => {
   }
 
   {
-    // This is invalid because the return type is not json
-    // @ts-expect-error index.ts(61, 3): An argument for 'options' was not provided.
-    const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
-      use(tx);
-      return Promise.resolve(123n);
-    });
-    use(s);
-  }
-
-  {
     // default not passed so it is undefined
     const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
       use(tx);
       return Promise.resolve(123);
     });
-    expectType<123 | undefined>(s);
+    expectType<number | undefined>(s);
+  }
+
+  {
+    const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
+      use(tx);
+      const m = new Map([[1, true]]);
+      return Promise.resolve(m);
+    });
+    expectType<Map<number, boolean> | undefined>(s);
   }
 
   {
@@ -355,7 +354,7 @@ test.skip('using isEqual [type checking]', async () => {
   }
 
   {
-    // @ts-expect-error Type 'Promise<bigint>' is not assignable to type 'Promise<ReadonlyJSONValue>'.ts(2345)
+    // @ ts-expect-error Type 'Promise<bigint>' is not assignable to type 'Promise<ReadonlyJSONValue>'.ts(2345)
     const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
       use(tx);
       return Promise.resolve(123n);
