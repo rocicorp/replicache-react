@@ -1,5 +1,5 @@
-import {expect} from '@esm-bundle/chai';
 import {resolver} from '@rocicorp/resolver';
+import {expect} from 'chai';
 import React from 'react';
 import {render} from 'react-dom';
 import type {JSONValue} from 'replicache';
@@ -36,8 +36,7 @@ test('null/undefined replicache', async () => {
     name: 'null-undef-test',
     licenseKey: TEST_LICENSE_KEY,
     mutators: {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      dummy: () => {},
+      dummy: () => undefined,
     },
   });
 

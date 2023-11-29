@@ -10,31 +10,34 @@ Build your UI using `subscribe()` (or `useSubscribe` in React).
 Whenever the data in Replicache changes — either due to changes in this tab, another tab, or on the server — the affected UI automatically updates. <br />
 Replicache only refires subscriptions when the query results have actually changed, eliminating wasteful re-renders.
 
-
 ## API
 
 ### function useSubscribe
 
 React hook that allows you monitor replicache changes
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| `rep` | Replicache | Replicache instance that is being monitored |
-| `query` | (tx: ReadTransaction) => Promise<R> | Query that retrieves data to be watched |
-| `def` | R |  default value returned on first render *or* whenever `query` returns `undefined` |
-| `deps` | Array<any> = [] | OPTIONAL: list of dependencies, query will be rerun when any of these change |
+| Parameter | Type                                | Description                                                                      |
+| :-------- | :---------------------------------- | :------------------------------------------------------------------------------- |
+| `rep`     | Replicache                          | Replicache instance that is being monitored                                      |
+| `query`   | (tx: ReadTransaction) => Promise<R> | Query that retrieves data to be watched                                          |
+| `def`     | R                                   | default value returned on first render _or_ whenever `query` returns `undefined` |
+| `deps`    | Array<any> = []                     | OPTIONAL: list of dependencies, query will be rerun when any of these change     |
 
 ## Usage
 
 example of `useSubscribe` in todo app that is watching a specific category
 
 ```js
-const {category} = props
+const {category} = props;
 const todos = useSubscribe(
-    replicache, 
-    tx => tx.scan({prefix: `/todo/${category}`}).values().toArray(), 
-    [], 
-    [category]
+  replicache,
+  tx =>
+    tx
+      .scan({prefix: `/todo/${category}`})
+      .values()
+      .toArray(),
+  [],
+  [category],
 );
 
 return (
@@ -55,11 +58,11 @@ This release changes the semantics of `def` slightly. In previous releases, `def
 This is an ergonomic benefit because it avoids having to type the default in two places. Before:
 
 ```ts
-useSubscribe(r, tx => (await tx.get("count")) ?? 0, 0)
+useSubscribe(r, tx => (await tx.get('count')) ?? 0, 0);
 ```
 
 now:
 
 ```ts
-useSubscribe(r, tx => tx.get("count"), 0)
+useSubscribe(r, tx => tx.get('count'), 0);
 ```
