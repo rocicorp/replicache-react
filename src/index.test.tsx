@@ -1,7 +1,7 @@
 import {expect} from '@esm-bundle/chai';
 import {resolver} from '@rocicorp/resolver';
 import React from 'react';
-import {render} from 'react-dom';
+import {createRoot} from 'react-dom/client';
 import type {JSONValue} from 'replicache';
 import {Replicache, TEST_LICENSE_KEY, WriteTransaction} from 'replicache';
 import {useSubscribe} from './index';
@@ -25,23 +25,25 @@ test('null/undefined replicache', async () => {
   }
 
   const div = document.createElement('div');
-
-  render(<A key="a" rep={null} def="a" />, div);
+  const root = createRoot(div);
+  root.render(<A key="a" rep={null} def="a" />);
+  await sleep(1);
   expect(div.textContent).to.equal('a');
 
-  render(<A key="b" rep={undefined} def="b" />, div);
+  root.render(<A key="b" rep={undefined} def="b" />);
+  await sleep(1);
   expect(div.textContent).to.equal('b');
 
   const rep = new Replicache({
     name: 'null-undef-test',
     licenseKey: TEST_LICENSE_KEY,
     mutators: {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      dummy: () => {},
+      dummy: () => undefined,
     },
   });
 
-  render(<A key="c" rep={rep} def="c" />, div);
+  root.render(<A key="c" rep={rep} def="c" />);
+  await sleep(1);
   expect(div.textContent).to.equal('c');
   await promise;
   await sleep(1);
@@ -71,6 +73,7 @@ test('Batching of subscriptions', async () => {
   await sleep(1);
 
   const div = document.createElement('div');
+  const root = createRoot(div);
 
   function A({rep}: {rep: MyRep}) {
     const dataA = useSubscribe(
@@ -98,7 +101,7 @@ test('Batching of subscriptions', async () => {
     );
   }
 
-  render(<A rep={rep} />, div);
+  root.render(<A rep={rep} />);
   await sleep(1);
   expect(renderLog).to.deep.equal(['render A', null, 'render B', null, null]);
   expect(div.innerHTML).to.equal('<div>a: </div><div>b: </div>');
@@ -133,6 +136,7 @@ test('returning undefined', async () => {
   }
 
   const div = document.createElement('div');
+  const root = createRoot(div);
 
   const rep = new Replicache({
     name: 'return-undefined',
@@ -140,7 +144,8 @@ test('returning undefined', async () => {
     mutators: {},
   });
 
-  render(<A key="c" rep={rep} def="default" />, div);
+  root.render(<A key="c" rep={rep} def="default" />);
+  await sleep(1);
   expect(div.textContent).to.equal('default');
   await promise;
   await sleep(1);
@@ -172,6 +177,7 @@ test('changing subscribable instances', async () => {
   }
 
   const div = document.createElement('div');
+  const root = createRoot(div);
 
   const rep1 = new Replicache({
     name: 'change-instance',
@@ -179,7 +185,7 @@ test('changing subscribable instances', async () => {
     mutators: {},
   });
 
-  render(<A rep={rep1} val="a" res={r1} />, div);
+  root.render(<A rep={rep1} val="a" res={r1} />);
   await p1;
   await sleep(1);
   expect(div.textContent).to.equal('a');
@@ -191,13 +197,13 @@ test('changing subscribable instances', async () => {
   });
 
   const {promise: p2, resolve: r2} = resolver();
-  render(<A rep={rep2} val="b" res={r2} />, div);
+  root.render(<A rep={rep2} val="b" res={r2} />);
   await p2;
   await sleep(1);
   expect(div.textContent).to.equal('b');
 
   const {resolve: r3} = resolver();
-  render(<A rep={undefined} val="c" res={r3} />, div);
+  root.render(<A rep={undefined} val="c" res={r3} />);
   await sleep(1);
   expect(div.textContent).to.equal('');
 
