@@ -37,6 +37,16 @@ export type UseSubscribeOptions<QueryRet, Default> = {
   isEqual?: ((a: QueryRet, b: QueryRet) => boolean) | undefined;
 };
 
+/**
+ * Runs a query and returns the result. Re-runs automatically whenever the
+ * query changes.
+ *
+ * NOTE: Changing `r` will cause the query to be re-run, but changing `query`
+ * or `options` will not (by default). This is by design because these two
+ * values are often object/array/function literals which change on every
+ * render. If you want to re-run the query when these change, you can pass
+ * them as dependencies.
+ */
 export function useSubscribe<Tx, QueryRet, Default = undefined>(
   r: Subscribable<Tx> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
@@ -66,19 +76,9 @@ export function useSubscribe<Tx, QueryRet, Default = undefined>(
       unsubscribe();
       setSnapshot(undefined);
     };
-    // NOTE: `def` and `query` not passed as a dep here purposely. It would be
-    // more correct to pass them, but it's also a footgun since it's common to
-    // pass object, array, or function literals which change on every render.
-    // Also note that if this ever changes, it's a breaking change and should
-    // be documented, as if callers pass an object/array/func literal, changing
-    // this will cause a render loop that would be hard to debug.
   }, [r, ...dependencies]);
   if (snapshot === undefined) {
     return def as Default;
   }
-  // This RemoveUndefined is just here to make the return type easier to read.
-  // It should be exactly equivalent to what the type would be without this.
-  // For some reason declaring the return type to be
-  // RemoveUndefined<QueryRet> | Default doesn't typecheck.
   return snapshot as RemoveUndefined<QueryRet>;
 }
