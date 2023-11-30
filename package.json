@@ -43,7 +43,7 @@
     "prettier": "^3.1.0",
     "react": "npm:@esm-bundle/react@^17.0.2-fix.1",
     "react-dom": "npm:@esm-bundle/react-dom@^17.0.2-fix.0",
-    "replicache": "^13.0.1",
+    "replicache": "^14.0.0",
     "typescript": "^5.3.2"
   },
   "files": [

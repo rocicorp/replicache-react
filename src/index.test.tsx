@@ -2,9 +2,9 @@ import {resolver} from '@rocicorp/resolver';
 import {expect} from 'chai';
 import React from 'react';
 import {render} from 'react-dom';
-import type {JSONValue} from 'replicache';
+import type {JSONValue, ReadTransaction} from 'replicache';
 import {Replicache, TEST_LICENSE_KEY, WriteTransaction} from 'replicache';
-import {useSubscribe} from './index';
+import {Subscribable, useSubscribe} from './index';
 
 function sleep(ms: number | undefined): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -19,7 +19,7 @@ test('null/undefined replicache', async () => {
         resolve();
         return 'hello';
       },
-      def,
+      {default: def},
     );
     return <div>{subResult}</div>;
   }
@@ -76,7 +76,7 @@ test('Batching of subscriptions', async () => {
       rep,
       // TODO: Use type param to get when new Replicache is released.
       async tx => (await tx.get('a')) as string | undefined,
-      null,
+      {default: null},
     );
     renderLog.push('render A', dataA);
     return <B rep={rep} dataA={dataA} />;
@@ -86,7 +86,7 @@ test('Batching of subscriptions', async () => {
     const dataB = useSubscribe(
       rep,
       async tx => (await tx.get('b')) as string | undefined,
-      null,
+      {default: null},
     );
     renderLog.push('render B', dataA, dataB);
     return (
@@ -126,7 +126,7 @@ test('returning undefined', async () => {
         resolve();
         return undefined;
       },
-      def,
+      {default: def},
     );
     return <div>{subResult}</div>;
   }
@@ -202,4 +202,162 @@ test('changing subscribable instances', async () => {
 
   await rep1.close();
   await rep2.close();
+});
+
+test('using isEqual', async () => {
+  const {promise, resolve} = resolver();
+
+  const sentinel = Symbol();
+
+  class FakeReplicache implements Subscribable<ReadTransaction> {
+    subscribe<Data>(
+      query: (tx: ReadTransaction) => Promise<Data>,
+      {
+        onData,
+        isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b),
+      }: {
+        onData: (data: Data) => void;
+        isEqual?: ((a: Data, b: Data) => boolean) | undefined;
+      },
+    ): () => void {
+      const data = query({} as ReadTransaction);
+      let previous: Data | typeof sentinel = sentinel;
+      void data.then(data => {
+        if (previous === sentinel || isEqual(previous, data)) {
+          previous = data;
+          return onData(data);
+        }
+      });
+
+      return () => undefined;
+    }
+  }
+
+  function A({
+    rep,
+    def,
+  }: {
+    rep: FakeReplicache | null | undefined;
+    def: string;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        resolve();
+        return 123n;
+      },
+      {
+        isEqual(a, b) {
+          return a === b;
+        },
+        default: def,
+      },
+    );
+    return (
+      <div>
+        {typeof subResult}, {String(subResult)}
+      </div>
+    );
+  }
+
+  const div = document.createElement('div');
+
+  render(<A key="a" rep={null} def="a" />, div);
+  expect(div.textContent).to.equal('string, a');
+
+  render(<A key="b" rep={undefined} def="b" />, div);
+  expect(div.textContent).to.equal('string, b');
+
+  const rep = new FakeReplicache();
+
+  render(<A key="c" rep={rep} def="c" />, div);
+  expect(div.textContent).to.equal('string, c');
+  await promise;
+  await sleep(1);
+  expect(div.textContent).to.equal('bigint, 123');
+});
+
+test.skip('using isEqual [type checking]', async () => {
+  const use = (...args: unknown[]) => args;
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function expectType<T>(_expression: T) {
+    // intentionally empty
+  }
+
+  class FakeReplicache<Tx> implements Subscribable<Tx> {
+    subscribe<Data>(
+      query: (tx: Tx) => Promise<Data>,
+      options: {
+        onData: (data: Data) => void;
+        isEqual?: ((a: Data, b: Data) => boolean) | undefined;
+      },
+    ): () => void {
+      use(query, options);
+      return () => undefined;
+    }
+  }
+
+  {
+    const s = useSubscribe(
+      new FakeReplicache<ReadTransaction>(),
+      tx => {
+        use(tx);
+        return Promise.resolve(123n);
+      },
+      {isEqual: (a, b) => a === b},
+    );
+    expectType<bigint | undefined>(s);
+  }
+
+  {
+    // default not passed so it is undefined
+    const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
+      use(tx);
+      return Promise.resolve(123);
+    });
+    expectType<number | undefined>(s);
+  }
+
+  {
+    const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
+      use(tx);
+      const m = new Map([[1, true]]);
+      return Promise.resolve(m);
+    });
+    expectType<Map<number, boolean> | undefined>(s);
+  }
+
+  {
+    const s = useSubscribe(
+      new FakeReplicache<ReadTransaction>(),
+      tx => {
+        use(tx);
+        return Promise.resolve(true);
+      },
+      {default: 456},
+    );
+    expectType<boolean | number>(s);
+  }
+
+  {
+    const s: bigint | 'abc' = useSubscribe(
+      new FakeReplicache<ReadTransaction>(),
+      tx => {
+        use(tx);
+        return Promise.resolve(123n);
+      },
+      {isEqual: (a, b) => a === b, default: 'abc'},
+    );
+    expectType<bigint | 'abc'>(s);
+  }
+
+  {
+    // @ ts-expect-error Type 'Promise<bigint>' is not assignable to type 'Promise<ReadonlyJSONValue>'.ts(2345)
+    const s = useSubscribe(new FakeReplicache<ReadTransaction>(), tx => {
+      use(tx);
+      return Promise.resolve(123n);
+    });
+    use(s);
+  }
 });

@@ -1,11 +1,14 @@
-import {useEffect, useState} from 'react';
+import {DependencyList, useEffect, useState} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
 
-export type Subscribable<Tx, Data> = {
-  subscribe: (
+export type Subscribable<Tx> = {
+  subscribe<Data>(
     query: (tx: Tx) => Promise<Data>,
-    {onData}: {onData: (data: Data) => void},
-  ) => () => void;
+    options: {
+      onData: (data: Data) => void;
+      isEqual?: ((a: Data, b: Data) => boolean) | undefined;
+    },
+  ): () => void;
 };
 
 // We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
@@ -27,12 +30,29 @@ function doCallback() {
 
 export type RemoveUndefined<T> = T extends undefined ? never : T;
 
-export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
-  r: Subscribable<Tx, Data> | null | undefined,
+export type UseSubscribeOptions<QueryRet, Default> = {
+  /** Default can already be undefined since it is an unbounded type parameter. */
+  default?: Default;
+  dependencies?: DependencyList | undefined;
+  isEqual?: ((a: QueryRet, b: QueryRet) => boolean) | undefined;
+};
+
+/**
+ * Runs a query and returns the result. Re-runs automatically whenever the
+ * query changes.
+ *
+ * NOTE: Changing `r` will cause the query to be re-run, but changing `query`
+ * or `options` will not (by default). This is by design because these two
+ * values are often object/array/function literals which change on every
+ * render. If you want to re-run the query when these change, you can pass
+ * them as dependencies.
+ */
+export function useSubscribe<Tx, QueryRet, Default = undefined>(
+  r: Subscribable<Tx> | null | undefined,
   query: (tx: Tx) => Promise<QueryRet>,
-  def: Default,
-  deps: Array<unknown> = [],
-) {
+  options: UseSubscribeOptions<QueryRet, Default> = {},
+): RemoveUndefined<QueryRet> | Default {
+  const {default: def, dependencies = [], isEqual} = options;
   const [snapshot, setSnapshot] = useState<QueryRet | undefined>(undefined);
   useEffect(() => {
     if (!r) {
@@ -43,31 +63,22 @@ export function useSubscribe<Tx, Data, QueryRet extends Data, Default>(
       onData: data => {
         // This is safe because we know that subscribe in fact can only return
         // `R` (the return type of query or def).
-        callbacks.push(() => setSnapshot(data as QueryRet));
+        callbacks.push(() => setSnapshot(data));
         if (!hasPendingCallback) {
           void Promise.resolve().then(doCallback);
           hasPendingCallback = true;
         }
       },
+      isEqual,
     });
 
     return () => {
       unsubscribe();
       setSnapshot(undefined);
     };
-    // NOTE: `def` and `query` not passed as a dep here purposely. It would be
-    // more correct to pass them, but it's also a footgun since it's common to
-    // pass object, array, or function literals which change on every render.
-    // Also note that if this ever changes, it's a breaking change and should
-    // be documented, as if callers pass an object/array/func literal, changing
-    // this will cause a render loop that would be hard to debug.
-  }, [r, ...deps]);
+  }, [r, ...dependencies]);
   if (snapshot === undefined) {
-    return def;
+    return def as Default;
   }
-  // This RemoveUndefined is just here to make the return type easier to read.
-  // It should be exactly equivalent to what the type would be without this.
-  // For some reason declaring the return type to be
-  // RemoveUndefined<QueryRet> | Default doesn't typecheck.
   return snapshot as RemoveUndefined<QueryRet>;
 }
