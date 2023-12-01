@@ -5,16 +5,15 @@
   "homepage": "https://replicache.dev",
   "repository": "github:rocicorp/replicache-react",
   "type": "module",
-  "main": "out/index.js",
-  "module": "out/index.mjs",
+  "module": "out/index.js",
+  "types": "out/index.d.ts",
+  "exports": "./out/index.js",
   "scripts": {
     "format": "prettier --write 'src/*.{js,jsx,json,ts,tsx,html,css,md}' '*.{cjs,js,jsx,json,ts,tsx,html,css,md}'",
     "check-format": "prettier --check 'src/*.{js,jsx,json,ts,tsx,html,css,md}' '*.{cjs,js,jsx,json,ts,tsx,html,css,md}'",
     "check-types": "tsc --noEmit",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
-    "build-cjs": "tsc --module commonjs --outDir out",
-    "build-esm": "tsc --module ESNext --outDir out && mv out/index.js out/index.mjs",
-    "build": "npm run build-esm && npm run build-cjs",
+    "build": "tsc",
     "prepack": "npm run lint && npm run test && npm run build",
     "test": "web-test-runner \"src/**/*.test.{jsx,js,ts,tsx}\"",
     "test:watch": "npm test -- --watch"
@@ -48,7 +47,6 @@
   },
   "files": [
     "out/index.js",
-    "out/index.mjs",
     "out/index.d.ts"
   ]
 }
