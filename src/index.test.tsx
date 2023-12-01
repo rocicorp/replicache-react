@@ -4,7 +4,7 @@ import React from 'react';
 import {render} from 'react-dom';
 import type {JSONValue, ReadTransaction} from 'replicache';
 import {Replicache, TEST_LICENSE_KEY, WriteTransaction} from 'replicache';
-import {Subscribable, useSubscribe} from './index';
+import {Subscribable, useSubscribe} from './index.js';
 
 function sleep(ms: number | undefined): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -3,17 +3,17 @@
     "jsx": "react",
     "target": "ES2022",
     "isolatedModules": true,
-
+    "outDir": "out",
+    "module": "Node16",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "allowJs": true,
     "lib": ["dom", "esnext"],
     "skipLibCheck": true
