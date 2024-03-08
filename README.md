@@ -60,7 +60,8 @@ Change package to pure ESM. See See https://github.com/rocicorp/replicache-react
 
 ### 5.0.0
 
-Add support for custom `isEqual`. See https://github.com/rocicorp/replicache-react/pull/59 for more information.
+- Add support for custom `isEqual`. See https://github.com/rocicorp/replicache-react/pull/59 for more information.
+- Requires Replicache 14.
 
 ### 4.0.1
 
@@ -81,3 +82,15 @@ now:
 ```ts
 useSubscribe(r, tx => tx.get('count'), 0);
 ```
+
+### 3.1.0
+
+Support a new generic form of `ReadTransaction`. New Replicaches and Reflects have `tx.get<T>` and `tx.scan<T>`. This update adds support for these to `replicache-react`. See: https://github.com/rocicorp/replicache-react/pull/55
+
+### 3.0.0
+
+Support (and require) Replicache 13.
+
+### 2.11.0
+
+When changing the value of `r` passed in, return the `def` value again, until the new subscription fires. See: https://github.com/rocicorp/replicache-react/commit/369d7513b09f48598db338c6776a9a22c7198e5c
