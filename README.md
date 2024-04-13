@@ -19,7 +19,7 @@ React hook that allows you monitor replicache changes
 | `rep`            | `Replicache`                                | Replicache instance that is being monitored                                      |
 | `query`          | `(tx: ReadTransaction) => Promise<R>`       | Query that retrieves data to be watched                                          |
 | `options?`       | `Object \| undefined`                       | Option bag containing the named arguments listed below ⬇️                        |
-| `.defaut?`       | `R \| undefined = undefined`                | Default value returned on first render _or_ whenever `query` returns `undefined` |
+| `.default?`      | `R \| undefined = undefined`                | Default value returned on first render _or_ whenever `query` returns `undefined` |
 | `.dependencies?` | `Array<any> = []`                           | List of dependencies, query will be rerun when any of these change               |
 | `.isEqual?`      | `((a: R, b: R) => boolean) = jsonDeepEqual` | Compare two returned values. Used to know whether to refire subscription.        |
 
