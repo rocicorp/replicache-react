@@ -1,5 +1,4 @@
 import {DependencyList, useEffect, useState} from 'react';
-import {unstable_batchedUpdates} from 'react-dom';
 
 export type Subscribable<Tx> = {
   subscribe<Data>(
@@ -11,8 +10,9 @@ export type Subscribable<Tx> = {
   ): () => void;
 };
 
-// We wrap all the callbacks in a `unstable_batchedUpdates` call to ensure that
-// we do not render things more than once over all of the changed subscriptions.
+// React 19+ has automatic batching for all updates (including microtasks),
+// so we no longer need unstable_batchedUpdates. We still batch via microtask
+// to ensure we do not render more than once over all changed subscriptions.
 
 let hasPendingCallback = false;
 let callbacks: (() => void)[] = [];
@@ -21,11 +21,9 @@ function doCallback() {
   const cbs = callbacks;
   callbacks = [];
   hasPendingCallback = false;
-  unstable_batchedUpdates(() => {
-    for (const callback of cbs) {
-      callback();
-    }
-  });
+  for (const callback of cbs) {
+    callback();
+  }
 }
 
 export type RemoveUndefined<T> = T extends undefined ? never : T;

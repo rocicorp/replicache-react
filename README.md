@@ -54,6 +54,11 @@ return (
 
 ## Changelog
 
+### 6.0.0
+
+Remove `unstable_batchedUpdates` - no longer needed with React 19's automatic batching.
+Requires React 19+. See https://react.dev/blog/2024/12/05/react-19
+
 ### 5.0.1
 
 Change package to pure ESM. See See https://github.com/rocicorp/replicache-react/pull/61 for more information.
