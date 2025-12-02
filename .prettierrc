@@ -3,5 +3,5 @@
   "trailingComma": "all",
   "arrowParens": "avoid",
   "bracketSpacing": false,
-  "quoteProps": "consistent",
+  "quoteProps": "consistent"
 }
