@@ -212,7 +212,9 @@ test('changing subscribable instances', async () => {
   const {resolve: r3} = resolver();
   render(<A rep={undefined} val="c" res={r3} />, div);
   await sleep(1);
-  expect(div.textContent).toBe('');
+  // With keepPreviousData=true (default), previous data is preserved when rep becomes undefined
+  // So subResult is 'b' (previous value), not undefined, thus val='c' is rendered
+  expect(div.textContent).toBe('c');
 
   await rep1.close();
   await rep2.close();
@@ -369,4 +371,389 @@ test.skip('using isEqual [type checking]', () => {
     });
     use(s);
   }
+});
+
+test('keepPreviousData: true - preserves data when switching instances', async () => {
+  const {promise: p1, resolve: r1} = resolver();
+  const {promise: p2, resolve: r2} = resolver();
+
+  function A({
+    rep,
+    val,
+    res,
+  }: {
+    rep: Replicache | null | undefined;
+    val: string;
+    res: () => void;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        res();
+        await sleep(10); // Small delay to ensure async behavior
+        return val;
+      },
+      {default: 'default', keepPreviousData: true},
+    );
+    return <div>{subResult}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  // Initial render with no rep
+  render(<A rep={null} val="a" res={() => {}} />, div);
+  expect(div.textContent).toBe('default');
+
+  // First instance
+  const rep1 = new Replicache({
+    name: 'keep-prev-data-1',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep1} val="data1" res={r1} />, div);
+  expect(div.textContent).toBe('default'); // Still showing default
+  await p1;
+  await sleep(20);
+  expect(div.textContent).toBe('data1'); // Now showing data1
+
+  // Switch to second instance - should keep showing data1 until data2 arrives
+  const rep2 = new Replicache({
+    name: 'keep-prev-data-2',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep2} val="data2" res={r2} />, div);
+  expect(div.textContent).toBe('data1'); // PRESERVED previous data
+  await p2;
+  await sleep(20);
+  expect(div.textContent).toBe('data2'); // Now showing new data
+
+  await rep1.close();
+  await rep2.close();
+});
+
+test('keepPreviousData: false - resets to default when switching instances', async () => {
+  const {promise: p1, resolve: r1} = resolver();
+  const {promise: p2, resolve: r2} = resolver();
+
+  function A({
+    rep,
+    val,
+    res,
+  }: {
+    rep: Replicache | null | undefined;
+    val: string;
+    res: () => void;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        res();
+        await sleep(10);
+        return val;
+      },
+      {default: 'default', keepPreviousData: false},
+    );
+    return <div>{subResult}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  // First instance
+  const rep1 = new Replicache({
+    name: 'no-keep-prev-data-1',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep1} val="data1" res={r1} />, div);
+  expect(div.textContent).toBe('default');
+  await p1;
+  await sleep(20);
+  expect(div.textContent).toBe('data1');
+
+  // Switch to second instance - should reset to default immediately
+  const rep2 = new Replicache({
+    name: 'no-keep-prev-data-2',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep2} val="data2" res={r2} />, div);
+  expect(div.textContent).toBe('default'); // RESET to default, not 'data1'
+  await p2;
+  await sleep(20);
+  expect(div.textContent).toBe('data2');
+
+  await rep1.close();
+  await rep2.close();
+});
+
+test('keepPreviousData: rapid dependency changes (A → B → C)', async () => {
+  const {promise: pA, resolve: rA} = resolver();
+  const {promise: pB, resolve: rB} = resolver();
+  const {promise: pC, resolve: rC} = resolver();
+
+  const resolvers = {a: rA, b: rB, c: rC};
+
+  function A({
+    rep,
+    val,
+  }: {
+    rep: Replicache | null | undefined;
+    val: keyof typeof resolvers;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        resolvers[val]();
+        await sleep(30); // Longer delay to simulate slow query
+        return `data-${val}`;
+      },
+      {default: 'default', keepPreviousData: true},
+    );
+    return <div>{subResult}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  const repA = new Replicache({
+    name: 'rapid-change-a',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+  const repB = new Replicache({
+    name: 'rapid-change-b',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+  const repC = new Replicache({
+    name: 'rapid-change-c',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  // Render A
+  render(<A rep={repA} val="a" />, div);
+  await pA;
+  await sleep(40);
+  expect(div.textContent).toBe('data-a');
+
+  // Rapidly switch A → B → C without waiting
+  render(<A rep={repB} val="b" />, div);
+  await pB; // B query starts
+  render(<A rep={repC} val="c" />, div);
+  await pC; // C query starts
+
+  // Wait for all queries to potentially complete
+  await sleep(100);
+
+  // Should show C's data, not stale data from A or B
+  expect(div.textContent).toBe('data-c');
+
+  await repA.close();
+  await repB.close();
+  await repC.close();
+});
+
+test('keepPreviousData: previous data was null', async () => {
+  const {promise: p1, resolve: r1} = resolver();
+  const {promise: p2, resolve: r2} = resolver();
+
+  function A({
+    rep,
+    val,
+    res,
+  }: {
+    rep: Replicache | null | undefined;
+    val: string | null;
+    res: () => void;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        res();
+        await sleep(10);
+        return val;
+      },
+      {default: 'default', keepPreviousData: true},
+    );
+    return <div>{String(subResult)}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  // First instance returns null
+  const rep1 = new Replicache({
+    name: 'null-prev-data-1',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep1} val={null} res={r1} />, div);
+  await p1;
+  await sleep(20);
+  expect(div.textContent).toBe('null'); // null is valid data (not undefined)
+
+  // Switch to second instance - should preserve null
+  const rep2 = new Replicache({
+    name: 'null-prev-data-2',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  render(<A rep={rep2} val="data2" res={r2} />, div);
+  expect(div.textContent).toBe('null'); // PRESERVED null as previous data
+  await p2;
+  await sleep(20);
+  expect(div.textContent).toBe('data2');
+
+  await rep1.close();
+  await rep2.close();
+});
+
+test('keepPreviousData: multiple transitions (A → B → A → null → B)', async () => {
+  function A({
+    rep,
+    val,
+    onQuery,
+  }: {
+    rep: Replicache | null | undefined;
+    val: string;
+    onQuery?: () => void;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        onQuery?.();
+        await sleep(10);
+        return val;
+      },
+      {default: 'default', keepPreviousData: true, dependencies: [val]},
+    );
+    return <div>{subResult}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  const repA = new Replicache({
+    name: 'multi-transition-a',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+  const repB = new Replicache({
+    name: 'multi-transition-b',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  // Transition 1: null → A
+  const {promise: p1, resolve: r1} = resolver();
+  render(<A rep={repA} val="dataA" onQuery={r1} />, div);
+  await p1;
+  await sleep(20);
+  expect(div.textContent).toBe('dataA');
+
+  // Transition 2: A → B
+  const {promise: p2, resolve: r2} = resolver();
+  render(<A rep={repB} val="dataB" onQuery={r2} />, div);
+  expect(div.textContent).toBe('dataA'); // Keep A's data
+  await p2;
+  await sleep(20);
+  expect(div.textContent).toBe('dataB');
+
+  // Transition 3: B → A (same repA but different val triggers re-subscribe via dependencies)
+  const {promise: p3, resolve: r3} = resolver();
+  render(<A rep={repA} val="dataA2" onQuery={r3} />, div);
+  expect(div.textContent).toBe('dataB'); // Keep B's data
+  await p3;
+  await sleep(20);
+  expect(div.textContent).toBe('dataA2');
+
+  // Transition 4: A → null
+  render(<A rep={null} val="unused" />, div);
+  expect(div.textContent).toBe('dataA2'); // Keep A's data even when rep is null
+
+  // Transition 5: null → B
+  const {promise: p5, resolve: r5} = resolver();
+  render(<A rep={repB} val="dataB2" onQuery={r5} />, div);
+  expect(div.textContent).toBe('dataA2'); // Still keeping previous data
+  await p5;
+  await sleep(20);
+  expect(div.textContent).toBe('dataB2');
+
+  await repA.close();
+  await repB.close();
+});
+
+test('keepPreviousData: generation counter ignores stale data', async () => {
+  const queryDelays: Record<string, number> = {
+    fast: 10,
+    slow: 100,
+  };
+
+  const {promise: pSlow, resolve: rSlow} = resolver();
+  const {promise: pFast, resolve: rFast} = resolver();
+
+  function A({
+    rep,
+    speed,
+  }: {
+    rep: Replicache | null | undefined;
+    speed: keyof typeof queryDelays;
+  }) {
+    const subResult = useSubscribe(
+      rep,
+      async () => {
+        if (speed === 'slow') {
+          rSlow();
+        } else {
+          rFast();
+        }
+        await sleep(queryDelays[speed]);
+        return `${speed}-data`;
+      },
+      {default: 'default', keepPreviousData: true},
+    );
+    return <div>{subResult}</div>;
+  }
+
+  const div = document.createElement('div');
+
+  const repSlow = new Replicache({
+    name: 'race-condition-slow',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  const repFast = new Replicache({
+    name: 'race-condition-fast',
+    licenseKey: TEST_LICENSE_KEY,
+    mutators: {},
+  });
+
+  // Start slow query
+  render(<A rep={repSlow} speed="slow" />, div);
+  await pSlow; // Slow query started (will take 100ms)
+  expect(div.textContent).toBe('default');
+
+  // Immediately switch to fast query (before slow completes)
+  render(<A rep={repFast} speed="fast" />, div);
+  await pFast; // Fast query started (will take 10ms)
+
+  // Wait for fast to complete
+  await sleep(30);
+  expect(div.textContent).toBe('fast-data');
+
+  // Wait for slow to complete (stale subscription)
+  await sleep(100);
+
+  // Should still show fast-data, NOT slow-data
+  // The generation counter should have ignored the stale slow query result
+  expect(div.textContent).toBe('fast-data');
+
+  await repSlow.close();
+  await repFast.close();
 });
