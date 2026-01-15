@@ -14,15 +14,15 @@ Provides a `useSubscribe()` hook for React which wraps Replicache's `subscribe()
 
 React hook that allows you monitor replicache changes
 
-| Parameter        | Type                                        | Description                                                                      |
-| :--------------- | :------------------------------------------ | :------------------------------------------------------------------------------- |
-| `rep`            | `Replicache`                                | Replicache instance that is being monitored                                      |
-| `query`          | `(tx: ReadTransaction) => Promise<R>`       | Query that retrieves data to be watched                                          |
-| `options?`       | `Object \| undefined`                       | Option bag containing the named arguments listed below ⬇️                        |
-| `.default?`      | `R \| undefined = undefined`                | Default value returned on first render _or_ whenever `query` returns `undefined` |
-| `.dependencies?` | `Array<any> = []`                           | List of dependencies, query will be rerun when any of these change               |
-| `.isEqual?`      | `((a: R, b: R) => boolean) = jsonDeepEqual` | Compare two returned values. Used to know whether to refire subscription.        |
-| `.keepPreviousData?` | `boolean = true`                        | Preserves previous data during dependency transitions to eliminate UI flash. Set to `false` to reset immediately. |
+| Parameter            | Type                                        | Description                                                                                                       |
+| :------------------- | :------------------------------------------ | :---------------------------------------------------------------------------------------------------------------- |
+| `rep`                | `Replicache`                                | Replicache instance that is being monitored                                                                       |
+| `query`              | `(tx: ReadTransaction) => Promise<R>`       | Query that retrieves data to be watched                                                                           |
+| `options?`           | `Object \| undefined`                       | Option bag containing the named arguments listed below ⬇️                                                         |
+| `.default?`          | `R \| undefined = undefined`                | Default value returned on first render _or_ whenever `query` returns `undefined`                                  |
+| `.dependencies?`     | `Array<any> = []`                           | List of dependencies, query will be rerun when any of these change                                                |
+| `.isEqual?`          | `((a: R, b: R) => boolean) = jsonDeepEqual` | Compare two returned values. Used to know whether to refire subscription.                                         |
+| `.keepPreviousData?` | `boolean = true`                            | Preserves previous data during dependency transitions to eliminate UI flash. Set to `false` to reset immediately. |
 
 ## Usage
 
@@ -85,15 +85,11 @@ User switches from category "work" to "personal":
 Set `keepPreviousData: false` if you want to show the default value during transitions:
 
 ```typescript
-const todos = useSubscribe(
-  rep,
-  tx => getTodosByCategory(tx, category),
-  {
-    default: [],
-    dependencies: [category],
-    keepPreviousData: false, // Show [] during category switch
-  }
-);
+const todos = useSubscribe(rep, tx => getTodosByCategory(tx, category), {
+  default: [],
+  dependencies: [category],
+  keepPreviousData: false, // Show [] during category switch
+});
 ```
 
 ## Changelog

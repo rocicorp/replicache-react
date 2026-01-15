@@ -143,7 +143,12 @@ export function useSubscribe<Tx, QueryRet, Default = undefined>(
   query: (tx: Tx) => Promise<QueryRet>,
   options: UseSubscribeOptions<QueryRet, Default> = {},
 ): RemoveUndefined<QueryRet> | Default {
-  const {default: def, dependencies = [], isEqual, keepPreviousData = true} = options;
+  const {
+    default: def,
+    dependencies = [],
+    isEqual,
+    keepPreviousData = true,
+  } = options;
   const [snapshot, setSnapshot] = useState<QueryRet | undefined>(undefined);
   const prevSnapshotRef = useRef<QueryRet | undefined>(undefined);
   const generationRef = useRef<number>(0);
@@ -156,9 +161,11 @@ export function useSubscribe<Tx, QueryRet, Default = undefined>(
 
   // Detect if we're in a transition (r or deps changed since last effect)
   // Only consider it a transition after the first effect run (hasRunEffectRef guards initial mount)
-  const depsChanged = dependencies.length !== prevDepsRef.current.length ||
+  const depsChanged =
+    dependencies.length !== prevDepsRef.current.length ||
     dependencies.some((dep, i) => !Object.is(dep, prevDepsRef.current[i]));
-  const hasTransitioned = (r !== prevRRef.current || depsChanged) && hasRunEffectRef.current;
+  const hasTransitioned =
+    (r !== prevRRef.current || depsChanged) && hasRunEffectRef.current;
 
   useEffect(() => {
     // Mark that effect has run at least once (for transition detection)
