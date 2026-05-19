@@ -17,47 +17,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run check-format
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check-format
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
 
   check-types:
     name: Check Types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run check-types
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check-types
 
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'npm'
-      - run: npm ci
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
+      - run: pnpm install --frozen-lockfile
       - name: Install Playwright Deps
-        run: npx playwright install --with-deps
-      - run: npm run test
+        run: pnpm exec playwright install --with-deps
+      - run: pnpm run test
