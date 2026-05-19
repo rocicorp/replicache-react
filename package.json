@@ -44,5 +44,6 @@
   "files": [
     "out/index.js",
     "out/index.d.ts"
-  ]
+  ],
+  "packageManager": "pnpm@11.1.3"
 }
