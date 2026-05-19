@@ -22,7 +22,7 @@ jobs:
           node-version: 22.x
       - name: Enable Corepack
         run: corepack enable
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run check-format
 
   lint:
@@ -35,7 +35,7 @@ jobs:
           node-version: 22.x
       - name: Enable Corepack
         run: corepack enable
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
 
   check-types:
@@ -48,7 +48,7 @@ jobs:
           node-version: 22.x
       - name: Enable Corepack
         run: corepack enable
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run check-types
 
   test:
@@ -61,7 +61,7 @@ jobs:
           node-version: 22.x
       - name: Enable Corepack
         run: corepack enable
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - name: Install Playwright Deps
         run: pnpm exec playwright install --with-deps
       - run: pnpm run test
