@@ -17,13 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
       - run: pnpm install
       - run: pnpm run check-format
 
@@ -32,13 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
       - run: pnpm install
       - run: pnpm run lint
 
@@ -47,13 +43,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
       - run: pnpm install
       - run: pnpm run check-types
 
@@ -62,13 +56,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'pnpm'
+          node-version: 22.x
+      - name: Enable Corepack
+        run: corepack enable
       - run: pnpm install
       - name: Install Playwright Deps
         run: pnpm exec playwright install --with-deps
